@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -105,7 +105,7 @@ export async function getCustomers(
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    let query = supabase
+    let query = (supabase as any)
         .from("customers")
         .select("*", { count: "exact" })
         .order("date", { ascending: sortOrder === "asc" })
@@ -141,7 +141,7 @@ export async function getCustomers(
         return { customers: [], count: 0 };
     }
 
-    return { customers: (data as Customer[]) ?? [], count: count ?? 0, search, phone };
+    return { customers: (data as any as Customer[]) ?? [], count: count ?? 0, search, phone };
 }
 
 /**
@@ -149,14 +149,14 @@ export async function getCustomers(
  */
 export async function getCustomerById(id: string): Promise<Customer | null> {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
         .from("customers")
         .select("*")
         .eq("id", id)
         .single();
 
     if (error) return null;
-    return data as Customer;
+    return data as any as Customer;
 }
 
 /**
@@ -164,14 +164,14 @@ export async function getCustomerById(id: string): Promise<Customer | null> {
  */
 export async function getRecentCustomers(limit = 5): Promise<Customer[]> {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
         .from("customers")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);
 
     if (error) return [];
-    return (data as Customer[]) ?? [];
+    return (data as any as Customer[]) ?? [];
 }
 
 /**
@@ -189,13 +189,13 @@ export async function getDashboardStats() {
         .split("T")[0];
 
     const [{ count: total }, { count: todayCount }, { count: monthCount }, { count: yearCount }] = await Promise.all([
-        supabase.from("customers").select("*", { count: "exact", head: true }),
-        supabase.from("customers").select("*", { count: "exact", head: true }).eq("date", today),
-        supabase
+        (supabase as any).from("customers").select("*", { count: "exact", head: true }),
+        (supabase as any).from("customers").select("*", { count: "exact", head: true }).eq("date", today),
+        (supabase as any)
             .from("customers")
             .select("*", { count: "exact", head: true })
             .gte("date", firstOfMonth),
-        supabase
+        (supabase as any)
             .from("customers")
             .select("*", { count: "exact", head: true })
             .gte("date", firstOfYear),
@@ -210,16 +210,13 @@ export async function getDashboardStats() {
 }
 
 /**
- * Get deliveries due today
- */
-/**
  * Get deliveries due today with optional filter
  */
 export async function getDeliveriesToday(filter: "all" | "delivered" | "not_delivered" = "all"): Promise<Customer[]> {
     const supabase = await createClient();
     const today = new Date().toISOString().split("T")[0];
 
-    let query = supabase
+    let query = (supabase as any)
         .from("customers")
         .select("*")
         .eq("delivery_date", today)
@@ -238,7 +235,7 @@ export async function getDeliveriesToday(filter: "all" | "delivered" | "not_deli
         return [];
     }
 
-    return (data as Customer[]) ?? [];
+    return (data as any as Customer[]) ?? [];
 }
 
 /**
@@ -246,7 +243,7 @@ export async function getDeliveriesToday(filter: "all" | "delivered" | "not_deli
  */
 export async function toggleDeliveryStatus(id: string, isDelivered: boolean) {
     const supabase = await createClient();
-    const { error } = await supabase
+    const { error } = await (supabase as any)
         .from("customers")
         .update({ is_delivered: isDelivered })
         .eq("id", id);
@@ -267,11 +264,10 @@ export async function toggleDeliveryStatus(id: string, isDelivered: boolean) {
 export async function getStatistics(range: "day" | "month" | "year" | "custom", startDate?: string, endDate?: string) {
     const supabase = await createClient();
 
-    let query = supabase.from("customers").select("id, date, delivery_date, name");
+    let query = (supabase as any).from("customers").select("id, date, delivery_date, name");
 
     if (range === "day") {
-        const today = new Date().toISOString().split("T")[0];
-        query = query.eq("date", today);
+        query = query.eq("date", new Date().toISOString().split("T")[0]);
     } else if (range === "month") {
         const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
         query = query.gte("date", firstOfMonth);
@@ -291,7 +287,7 @@ export async function getStatistics(range: "day" | "month" | "year" | "custom", 
 
     return {
         count: data?.length ?? 0,
-        items: data ?? []
+        items: (data as any) ?? []
     };
 }
 
@@ -310,7 +306,7 @@ export async function createCustomer(formData: CustomerFormData): Promise<Action
     const { data: { user } } = await supabase.auth.getUser();
     const recorded_by = user?.email ?? null;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
         .from("customers")
         .insert([{ ...parsed.data, recorded_by }])
         .select()
@@ -323,7 +319,7 @@ export async function createCustomer(formData: CustomerFormData): Promise<Action
 
     revalidatePath("/");
     revalidatePath("/customers");
-    return { success: true, data: data as Customer };
+    return { success: true, data: data as any as Customer };
 }
 
 /**
@@ -339,7 +335,7 @@ export async function updateCustomer(
     }
 
     const supabase = await createClient();
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
         .from("customers")
         .update({ ...parsed.data, updated_at: new Date().toISOString() })
         .eq("id", id)
@@ -354,7 +350,7 @@ export async function updateCustomer(
     revalidatePath("/");
     revalidatePath("/customers");
     revalidatePath(`/customers/${id}/edit`);
-    return { success: true, data: data as Customer };
+    return { success: true, data: data as any as Customer };
 }
 
 /**
@@ -362,7 +358,7 @@ export async function updateCustomer(
  */
 export async function deleteCustomer(id: string): Promise<ActionResult> {
     const supabase = await createClient();
-    const { error } = await supabase.from("customers").delete().eq("id", id);
+    const { error } = await (supabase as any).from("customers").delete().eq("id", id);
 
     if (error) {
         console.error("deleteCustomer error:", error);
