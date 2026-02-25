@@ -179,32 +179,34 @@ export function CustomerTable({
             )}
 
             {/* Search + Sort */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by name…"
-                        value={search}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        className="pl-9 h-9"
-                    />
+            <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
+                <div className="flex gap-2 flex-1">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Name…"
+                            value={search}
+                            onChange={(e) => handleSearch(e.target.value)}
+                            className="pl-9 h-10 md:h-9 rounded-xl md:rounded-lg"
+                        />
+                    </div>
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Phone…"
+                            value={phone}
+                            onChange={(e) => handlePhoneSearch(e.target.value)}
+                            className="pl-9 h-10 md:h-9 rounded-xl md:rounded-lg"
+                        />
+                    </div>
                 </div>
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by phone…"
-                        value={phone}
-                        onChange={(e) => handlePhoneSearch(e.target.value)}
-                        className="pl-9 h-9"
-                    />
-                </div>
-                <Button variant="outline" onClick={handleSort} className="gap-2 w-full sm:w-auto h-9">
+                <Button variant="outline" onClick={handleSort} className="gap-2 w-full sm:w-auto h-10 md:h-9 rounded-xl md:rounded-lg shrink-0">
                     {sortOrder === "desc" ? (
                         <ArrowDown className="w-4 h-4" />
                     ) : (
                         <ArrowUp className="w-4 h-4" />
                     )}
-                    {sortOrder === "desc" ? "Newest" : "Oldest"}
+                    <span className="text-xs font-bold uppercase tracking-tight">{sortOrder === "desc" ? "Newest" : "Oldest"}</span>
                 </Button>
             </div>
 
@@ -230,87 +232,133 @@ export function CustomerTable({
                         )}
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-border bg-muted/40">
-                                    <th className="text-left px-4 py-2 font-medium text-muted-foreground whitespace-nowrap">#</th>
-                                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Name</th>
-                                    <th className="text-left px-4 py-2 font-medium text-muted-foreground hidden sm:table-cell">Phone</th>
-                                    <th className="text-left px-4 py-2 font-medium text-muted-foreground hidden md:table-cell whitespace-nowrap">
-                                        <button onClick={handleSort} className="flex items-center gap-1 hover:text-foreground transition-colors">
-                                            Measurement Date
-                                            <ArrowUpDown className="w-3 h-3" />
-                                        </button>
-                                    </th>
-                                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Order</th>
-                                    <th className="text-left px-4 py-2 font-medium text-muted-foreground hidden lg:table-cell">Recorded By</th>
-                                    <th className="px-4 py-2" />
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {customers.map((customer, i) => {
-                                    const rowNum = (page - 1) * pageSize + i + 1;
-                                    return (
-                                        <tr
-                                            key={customer.id}
-                                            onClick={() => handleRowClick(customer.id)}
-                                            className="border-b border-border/60 last:border-0 hover:bg-muted/20 transition-colors group cursor-pointer"
-                                        >
-                                            <td className="px-4 py-1.5 text-muted-foreground text-xs tabular-nums">{rowNum}</td>
-                                            <td className="px-4 py-1.5 font-medium text-foreground group-hover:text-primary transition-colors">
-                                                {customer.name}
-                                            </td>
-                                            <td className="px-4 py-1.5 text-muted-foreground hidden sm:table-cell text-xs">{customer.phone}</td>
-                                            <td className="px-4 py-1.5 text-muted-foreground hidden md:table-cell whitespace-nowrap text-xs">
-                                                {format(new Date(customer.date), "dd MMM yyyy")}
-                                            </td>
-                                            <td className="px-4 py-1.5 text-muted-foreground text-xs">
-                                                {customer.selected_garments?.join(", ") || "—"}
-                                            </td>
-                                            <td className="px-4 py-1.5 text-muted-foreground hidden lg:table-cell text-xs whitespace-nowrap" title={customer.recorded_by ?? "Unknown"}>
-                                                {customer.recorded_by ?? "—"}
-                                            </td>
-                                            <td className="px-4 py-1.5" onClick={(e) => e.stopPropagation()}>
-                                                <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button
-                                                        asChild
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-7 w-7 p-0"
-                                                        title="Edit"
-                                                    >
-                                                        <Link href={`/customers/${customer.id}/edit`}>
-                                                            <Edit className="w-3.5 h-3.5" />
-                                                        </Link>
-                                                    </Button>
-                                                    <Button
-                                                        asChild
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-7 w-7 p-0"
-                                                        title="Duplicate"
-                                                    >
-                                                        <Link href={`/customers/${customer.id}/edit?duplicate=true`}>
-                                                            <Copy className="w-3.5 h-3.5" />
-                                                        </Link>
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                        title="Delete"
-                                                        onClick={() => setDeleteTarget(customer)}
-                                                    >
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                    <div className="divide-y divide-border/50">
+                        {/* Mobile View: List */}
+                        <div className="md:hidden divide-y divide-border/50">
+                            {customers.map((customer, i) => {
+                                const rowNum = (page - 1) * pageSize + i + 1;
+                                return (
+                                    <div
+                                        key={customer.id}
+                                        onClick={() => handleRowClick(customer.id)}
+                                        className="p-4 active:bg-muted transition-colors"
+                                    >
+                                        <div className="flex justify-between items-start mb-1">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <span className="text-[10px] tabular-nums text-muted-foreground/50 font-bold">{rowNum}.</span>
+                                                <p className="font-bold text-foreground truncate">{customer.name}</p>
+                                            </div>
+                                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                                <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                                    <Link href={`/customers/${customer.id}/edit`}>
+                                                        <Edit className="w-4 h-4" />
+                                                    </Link>
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-destructive"
+                                                    onClick={() => setDeleteTarget(customer)}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium mb-2">
+                                            <span>{customer.phone}</span>
+                                            <span className="w-1 h-1 rounded-full bg-muted-foreground/30 shrink-0" />
+                                            <span>{format(new Date(customer.date), "dd MMM")}</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {customer.selected_garments?.map((g, idx) => (
+                                                <span key={idx} className="px-1.5 py-0.5 rounded bg-muted text-[9px] font-bold uppercase tracking-tight">{g}</span>
+                                            )) || <span className="text-[9px] text-muted-foreground">No garments</span>}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Desktop View: Table */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-border bg-muted/40">
+                                        <th className="text-left px-4 py-3 font-bold text-muted-foreground uppercase tracking-widest text-[9px]">#</th>
+                                        <th className="text-left px-4 py-3 font-bold text-muted-foreground uppercase tracking-widest text-[9px]">Name</th>
+                                        <th className="text-left px-4 py-3 font-bold text-muted-foreground uppercase tracking-widest text-[9px] hidden sm:table-cell">Phone</th>
+                                        <th className="text-left px-4 py-3 font-bold text-muted-foreground uppercase tracking-widest text-[9px] hidden md:table-cell whitespace-nowrap">
+                                            <button onClick={handleSort} className="flex items-center gap-1 hover:text-foreground transition-colors uppercase">
+                                                Measurement
+                                                <ArrowUpDown className="w-3 h-3" />
+                                            </button>
+                                        </th>
+                                        <th className="text-left px-4 py-3 font-bold text-muted-foreground uppercase tracking-widest text-[9px] hidden md:table-cell whitespace-nowrap">
+                                            Trial
+                                        </th>
+                                        <th className="text-left px-4 py-3 font-bold text-muted-foreground uppercase tracking-widest text-[9px]">Order</th>
+                                        <th className="text-left px-4 py-3 font-bold text-muted-foreground uppercase tracking-widest text-[9px] hidden lg:table-cell">Recorder</th>
+                                        <th className="text-left px-4 py-3 font-bold text-muted-foreground uppercase tracking-widest text-[9px] hidden xl:table-cell">DOB</th>
+                                        <th className="px-4 py-3" />
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {customers.map((customer, i) => {
+                                        const rowNum = (page - 1) * pageSize + i + 1;
+                                        return (
+                                            <tr
+                                                key={customer.id}
+                                                onClick={() => handleRowClick(customer.id)}
+                                                className="border-b border-border/60 last:border-0 hover:bg-muted/10 transition-colors group cursor-pointer"
+                                            >
+                                                <td className="px-4 py-3 text-muted-foreground text-xs tabular-nums">{rowNum}</td>
+                                                <td className="px-4 py-3 font-bold text-foreground group-hover:text-primary transition-colors">
+                                                    {customer.name}
+                                                </td>
+                                                <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell text-xs font-medium">{customer.phone}</td>
+                                                <td className="px-4 py-3 text-muted-foreground hidden md:table-cell whitespace-nowrap text-xs font-medium">
+                                                    {format(new Date(customer.date), "dd MMM yyyy")}
+                                                </td>
+                                                <td className="px-4 py-3 text-muted-foreground hidden md:table-cell whitespace-nowrap text-xs font-medium">
+                                                    {customer.trial_date ? format(new Date(customer.trial_date), "dd MMM yyyy") : "—"}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {customer.selected_garments?.map((g, idx) => (
+                                                            <span key={idx} className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-bold uppercase">{g}</span>
+                                                        )) || "—"}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell text-xs font-medium whitespace-nowrap" title={customer.recorded_by ?? "Unknown"}>
+                                                    {customer.recorded_by ?? "—"}
+                                                </td>
+                                                <td className="px-4 py-3 text-muted-foreground hidden xl:table-cell text-xs font-medium whitespace-nowrap">
+                                                    {customer.dob ? format(new Date(customer.dob), "dd MMM") : "—"}
+                                                </td>
+                                                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                                                    <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button asChild variant="ghost" size="icon" className="h-8 w-8" title="Edit">
+                                                            <Link href={`/customers/${customer.id}/edit`}>
+                                                                <Edit className="w-4 h-4" />
+                                                            </Link>
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-destructive hover:bg-destructive/5"
+                                                            title="Delete"
+                                                            onClick={() => setDeleteTarget(customer)}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
             </div>

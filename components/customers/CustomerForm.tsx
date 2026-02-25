@@ -86,7 +86,9 @@ export function CustomerForm({ mode: initialMode, initialData, isDuplicate }: Cu
             name: isDuplicate ? `${initialData.name} (Copy)` : initialData.name,
             phone: initialData.phone,
             date: isDuplicate ? today : initialData.date,
+            trial_date: isDuplicate ? today : initialData.trial_date,
             delivery_date: isDuplicate ? today : initialData.delivery_date,
+            dob: initialData.dob ?? "",
             notes: initialData.notes ?? "",
             selected_garments: initialData.selected_garments ?? [],
             // Measurements
@@ -153,7 +155,7 @@ export function CustomerForm({ mode: initialMode, initialData, isDuplicate }: Cu
             jodhpuri_seat: initialData.jodhpuri_seat ?? undefined,
             jodhpuri_collar: initialData.jodhpuri_collar ?? undefined,
         }
-        : { date: today, delivery_date: today, selected_garments: [] };
+        : { date: today, trial_date: today, delivery_date: today, dob: "", selected_garments: [] };
 
     const {
         register,
@@ -205,12 +207,12 @@ export function CustomerForm({ mode: initialMode, initialData, isDuplicate }: Cu
             );
 
             if (addAnother) {
-                reset({ date: today, delivery_date: today, selected_garments: [] });
+                reset({ date: today, trial_date: today, delivery_date: today, dob: "", selected_garments: [] });
                 setMode("new");
                 setAddAnother(false);
             } else {
                 if (mode === "new" || isDuplicate) {
-                    reset({ date: today, delivery_date: today, selected_garments: [] });
+                    reset({ date: today, trial_date: today, delivery_date: today, dob: "", selected_garments: [] });
                     router.refresh();
                 } else {
                     router.push("/customers");
@@ -304,6 +306,25 @@ export function CustomerForm({ mode: initialMode, initialData, isDuplicate }: Cu
                     </div>
 
                     <div className="space-y-1.5">
+                        <Label htmlFor="trial_date" className="text-sm font-medium">
+                            Trial Date <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                            id="trial_date"
+                            type="date"
+                            {...register("trial_date")}
+                            disabled={isReadOnly}
+                            className={cn(
+                                "disabled:opacity-100 disabled:bg-muted/30 disabled:border-transparent",
+                                errors.trial_date ? "border-destructive" : ""
+                            )}
+                        />
+                        {errors.trial_date && (
+                            <p className="text-xs text-destructive">{errors.trial_date.message}</p>
+                        )}
+                    </div>
+
+                    <div className="space-y-1.5">
                         <Label htmlFor="delivery_date" className="text-sm font-medium">
                             Delivery Date <span className="text-destructive">*</span>
                         </Label>
@@ -319,6 +340,25 @@ export function CustomerForm({ mode: initialMode, initialData, isDuplicate }: Cu
                         />
                         {errors.delivery_date && (
                             <p className="text-xs text-destructive">{errors.delivery_date.message}</p>
+                        )}
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="dob" className="text-sm font-medium">
+                            Date of Birth <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+                        </Label>
+                        <Input
+                            id="dob"
+                            type="date"
+                            {...register("dob")}
+                            disabled={isReadOnly}
+                            className={cn(
+                                "disabled:opacity-100 disabled:bg-muted/30 disabled:border-transparent",
+                                errors.dob ? "border-destructive" : ""
+                            )}
+                        />
+                        {errors.dob && (
+                            <p className="text-xs text-destructive">{errors.dob.message}</p>
                         )}
                     </div>
                 </div>

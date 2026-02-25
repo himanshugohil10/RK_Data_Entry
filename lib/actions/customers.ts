@@ -9,7 +9,9 @@ export type Customer = {
     name: string;
     phone: string;
     date: string;
+    trial_date: string;
     delivery_date: string;
+    dob?: string | null;
     notes?: string | null;
     selected_garments?: string[] | null;
     shirt_length?: number | null;
@@ -237,6 +239,28 @@ export async function getDeliveriesToday(filter: "all" | "delivered" | "not_deli
 
     return (data as any as Customer[]) ?? [];
 }
+
+/**
+ * Get trials due today
+ */
+export async function getTrialsToday(): Promise<Customer[]> {
+    const supabase = await createClient();
+    const today = new Date().toISOString().split("T")[0];
+
+    const { data, error } = await (supabase as any)
+        .from("customers")
+        .select("*")
+        .eq("trial_date", today)
+        .order("name", { ascending: true });
+
+    if (error) {
+        console.error("getTrialsToday error:", error);
+        return [];
+    }
+
+    return (data as any as Customer[]) ?? [];
+}
+
 
 /**
  * Toggle delivery status

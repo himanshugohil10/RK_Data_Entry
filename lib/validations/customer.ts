@@ -14,7 +14,9 @@ export const customerSchema = z.object({
         .min(1, "Phone number is required")
         .regex(indianPhoneRegex, "Enter a valid 10-digit Indian mobile number (starts with 6-9)"),
     date: z.string().min(1, "Date is required"),
+    trial_date: z.string().min(1, "Trial Date is required"),
     delivery_date: z.string().min(1, "Delivery Date is required"),
+    dob: z.string().optional().or(z.literal("")),
     notes: z.string().max(500, "Notes too long").optional().or(z.literal("")),
     selected_garments: z.array(z.string()).default([]),
     // Shirt
@@ -89,11 +91,14 @@ export const customerSchema = z.object({
     jodhpuri_collar: measurementField,
     recorded_by: z.string().optional().or(z.literal("")),
 }).refine((data) => {
-    if (!data.date || !data.delivery_date) return true;
-    return new Date(data.delivery_date) >= new Date(data.date);
+    if (!data.date || !data.delivery_date || !data.trial_date) return true;
+    const mDate = new Date(data.date);
+    const tDate = new Date(data.trial_date);
+    const dDate = new Date(data.delivery_date);
+    return tDate >= mDate && dDate >= tDate;
 }, {
-    message: "Delivery date cannot be earlier than measurement date",
-    path: ["delivery_date"],
+    message: "Trial date must be between measurement and delivery dates",
+    path: ["trial_date"],
 });
 
 export type CustomerFormData = z.infer<typeof customerSchema>;

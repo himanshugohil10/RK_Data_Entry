@@ -15,7 +15,9 @@ export interface Database {
           name: string
           phone: string
           date: string
+          trial_date: string
           delivery_date: string
+          dob: string | null
           notes: string | null
           selected_garments: string[] | null
           shirt_length: number | null
@@ -90,7 +92,9 @@ export interface Database {
           name: string
           phone: string
           date: string
+          trial_date: string
           delivery_date: string
+          dob?: string | null
           notes?: string | null
           selected_garments?: string[] | null
           shirt_length?: number | null
@@ -165,7 +169,9 @@ export interface Database {
           name?: string
           phone?: string
           date?: string
+          trial_date?: string
           delivery_date?: string
+          dob?: string | null
           notes?: string | null
           selected_garments?: string[] | null
           shirt_length?: number | null
