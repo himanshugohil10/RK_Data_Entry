@@ -321,6 +321,7 @@ export async function getStatistics(range: "day" | "month" | "year" | "custom", 
 export async function createCustomer(formData: CustomerFormData): Promise<ActionResult> {
     const parsed = customerSchema.safeParse(formData);
     if (!parsed.success) {
+        console.error("createCustomer validation error:", parsed.error.format());
         return { success: false, error: parsed.error.errors[0].message };
     }
 
@@ -355,6 +356,7 @@ export async function updateCustomer(
 ): Promise<ActionResult> {
     const parsed = customerSchema.safeParse(formData);
     if (!parsed.success) {
+        console.error("updateCustomer validation error:", parsed.error.format());
         return { success: false, error: parsed.error.errors[0].message };
     }
 

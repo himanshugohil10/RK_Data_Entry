@@ -16,8 +16,8 @@ export const customerSchema = z.object({
     date: z.string().min(1, "Date is required"),
     trial_date: z.string().min(1, "Trial Date is required"),
     delivery_date: z.string().min(1, "Delivery Date is required"),
-    dob: z.string().optional().or(z.literal("")),
-    notes: z.string().max(500, "Notes too long").optional().or(z.literal("")),
+    dob: z.string().optional().nullable().or(z.literal("")).transform(v => v === "" ? null : v),
+    notes: z.string().max(500, "Notes too long").optional().nullable().or(z.literal("")).transform(v => v === "" ? null : v),
     selected_garments: z.array(z.string()).default([]),
     // Shirt
     shirt_length: measurementField,
@@ -89,7 +89,7 @@ export const customerSchema = z.object({
     jodhpuri_waist: measurementField,
     jodhpuri_seat: measurementField,
     jodhpuri_collar: measurementField,
-    recorded_by: z.string().optional().or(z.literal("")),
+    recorded_by: z.string().optional().nullable().or(z.literal("")).transform(v => v === "" ? null : v),
 }).refine((data) => {
     if (!data.date || !data.delivery_date || !data.trial_date) return true;
     const mDate = new Date(data.date);
