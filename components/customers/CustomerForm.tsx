@@ -20,7 +20,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Save, RotateCcw, Copy, Edit } from "lucide-react";
+import { AlertTriangle, Save, RotateCcw, Copy, Edit, Printer } from "lucide-react";
+import { generateCustomerBill } from "@/lib/pdfUtils";
 import { cn } from "@/lib/utils";
 
 interface CustomerFormProps {
@@ -490,6 +491,16 @@ export function CustomerForm({ mode: initialMode, initialData, isDuplicate }: Cu
 
                     <Button
                         type="button"
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => generateCustomerBill(watchedValues)}
+                    >
+                        <Printer className="w-4 h-4" />
+                        Generate Bill
+                    </Button>
+
+                    <Button
+                        type="button"
                         variant="ghost"
                         className="text-muted-foreground"
                         onClick={() => {
@@ -526,6 +537,17 @@ export function CustomerForm({ mode: initialMode, initialData, isDuplicate }: Cu
                             Duplicate Record
                         </Link>
                     </Button>
+
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        className="gap-2"
+                        onClick={() => generateCustomerBill(watchedValues)}
+                    >
+                        <Printer className="w-4 h-4" />
+                        Print / Generate Bill
+                    </Button>
+
                     <Button
                         type="button"
                         variant="ghost"
