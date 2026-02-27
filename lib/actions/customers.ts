@@ -78,6 +78,7 @@ export type Customer = {
     jodhpuri_collar?: number | string | null;
     recorded_by?: string | null;
     is_delivered?: boolean | null;
+    is_trialed?: boolean | null;
     created_at: string;
     updated_at: string;
 };
@@ -243,15 +244,23 @@ export async function getDeliveriesToday(filter: "all" | "delivered" | "not_deli
 /**
  * Get trials due today
  */
-export async function getTrialsToday(): Promise<Customer[]> {
+export async function getTrialsToday(filter: "all" | "trialed" | "not_trialed" = "not_trialed"): Promise<Customer[]> {
     const supabase = await createClient();
     const today = new Date().toISOString().split("T")[0];
 
-    const { data, error } = await (supabase as any)
+    let query = (supabase as any)
         .from("customers")
         .select("*")
         .eq("trial_date", today)
         .order("name", { ascending: true });
+
+    if (filter === "trialed") {
+        query = query.eq("is_trialed", true);
+    } else if (filter === "not_trialed") {
+        query = query.or("is_trialed.eq.false,is_trialed.is.null");
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         console.error("getTrialsToday error:", error);
@@ -275,6 +284,26 @@ export async function toggleDeliveryStatus(id: string, isDelivered: boolean) {
     if (error) {
         console.error("toggleDeliveryStatus error:", error);
         return { success: false, error: "Failed to update delivery status" };
+    }
+
+    revalidatePath("/");
+    revalidatePath("/customers");
+    return { success: true };
+}
+
+/**
+ * Toggle trial status
+ */
+export async function toggleTrialStatus(id: string, isTrialed: boolean) {
+    const supabase = await createClient();
+    const { error } = await (supabase as any)
+        .from("customers")
+        .update({ is_trialed: isTrialed })
+        .eq("id", id);
+
+    if (error) {
+        console.error("toggleTrialStatus error:", error);
+        return { success: false, error: "Failed to update trial status" };
     }
 
     revalidatePath("/");

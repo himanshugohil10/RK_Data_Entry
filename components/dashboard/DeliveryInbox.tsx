@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getDeliveriesToday, toggleDeliveryStatus, type Customer } from "@/lib/actions/customers";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Phone, CheckCircle2, Circle, CalendarClock, Loader2 } from "lucide-react";
+import { Phone, CheckCircle2, Circle, CalendarClock, Loader2, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -138,25 +138,32 @@ export function DeliveryInbox() {
                                         </span>
                                     </div>
                                 </div>
-                                <button
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
                                     onClick={(e) => handleToggleStatus(e, customer.id, customer.is_delivered || false)}
                                     disabled={toggling === customer.id}
                                     className={cn(
-                                        "p-2 rounded-lg transition-all",
+                                        "h-8 px-3 rounded-full transition-all duration-300 gap-1.5 font-bold text-[10px] uppercase tracking-wider",
                                         customer.is_delivered
-                                            ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
-                                            : "text-muted-foreground hover:text-primary hover:bg-white border border-transparent hover:border-border"
+                                            ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20"
+                                            : "bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/10 hover:border-primary shadow-sm"
                                     )}
-                                    title={customer.is_delivered ? "Mark as Not Delivered" : "Mark as Delivered"}
                                 >
                                     {toggling === customer.id ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                     ) : customer.is_delivered ? (
-                                        <CheckCircle2 className="w-5 h-5 fill-emerald-50" />
+                                        <>
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                            <span>Delivered</span>
+                                        </>
                                     ) : (
-                                        <Circle className="w-5 h-5" />
+                                        <>
+                                            <Check className="w-3.5 h-3.5" />
+                                            <span>Deliver</span>
+                                        </>
                                     )}
-                                </button>
+                                </Button>
                             </div>
                         ))}
                     </div>

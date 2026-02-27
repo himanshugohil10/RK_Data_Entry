@@ -5,12 +5,14 @@ import {
     getTrialsToday,
     getDeliveriesToday,
     toggleDeliveryStatus,
+    toggleTrialStatus,
     type Customer
 } from "@/lib/actions/customers";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
     Phone,
     CheckCircle2,
+    Check,
     Circle,
     CalendarClock,
     Loader2,
@@ -43,7 +45,7 @@ export function CombinedInbox() {
     const fetchItems = async () => {
         setLoading(true);
         const [trials, deliveries] = await Promise.all([
-            getTrialsToday(),
+            getTrialsToday("all"),
             getDeliveriesToday("all")
         ]);
 
@@ -64,10 +66,14 @@ export function CombinedInbox() {
         fetchItems();
     }, []);
 
-    const handleToggleStatus = async (e: React.MouseEvent, id: string, currentStatus: boolean | null) => {
+    const handleToggleStatus = async (e: React.MouseEvent, item: InboxItem) => {
         e.stopPropagation();
-        setToggling(id);
-        const result = await toggleDeliveryStatus(id, !currentStatus);
+        setToggling(item.id);
+        const currentStatus = item.type === "trial" ? item.is_trialed : item.is_delivered;
+        const result = item.type === "trial"
+            ? await toggleTrialStatus(item.id, !currentStatus)
+            : await toggleDeliveryStatus(item.id, !currentStatus);
+
         if (result.success) {
             await fetchItems();
         }
@@ -76,9 +82,10 @@ export function CombinedInbox() {
 
     const filteredItems = items.filter(item => {
         const typeMatch = filter === "all" || item.type === filter;
+        const isDone = item.type === "trial" ? item.is_trialed : item.is_delivered;
         const statusMatch = statusFilter === "all" ||
-            (statusFilter === "pending" && !item.is_delivered) ||
-            (statusFilter === "delivered" && item.is_delivered);
+            (statusFilter === "pending" && !isDone) ||
+            (statusFilter === "delivered" && isDone);
         return typeMatch && statusMatch;
     });
 
@@ -134,7 +141,7 @@ export function CombinedInbox() {
                                 <div className="px-2 py-1.5 mt-1 border-t text-[10px] font-bold text-muted-foreground uppercase">Filter Status</div>
                                 <DropdownMenuItem onClick={() => setStatusFilter("all")} className={cn(statusFilter === "all" && "bg-accent")}>All Status</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setStatusFilter("pending")} className={cn(statusFilter === "pending" && "bg-accent")}>Pending Only</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setStatusFilter("delivered")} className={cn(statusFilter === "delivered" && "bg-accent")}>Delivered Only</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setStatusFilter("delivered")} className={cn(statusFilter === "delivered" && "bg-accent")}>Done Only</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -184,79 +191,88 @@ export function CombinedInbox() {
                     </div>
                 ) : (
                     <div className="divide-y divide-border/50">
-                        {filteredItems.map((item) => (
-                            <div
-                                key={`${item.type}-${item.id}`}
-                                onClick={() => router.push(`/customers/${item.id}`)}
-                                className={cn(
-                                    "group relative flex items-center justify-between p-4 cursor-pointer transition-all hover:bg-muted/30",
-                                    item.is_delivered && "opacity-60 grayscale-[0.5]"
-                                )}
-                            >
-                                <div className="flex items-start gap-3 min-w-0">
-                                    <div className={cn(
-                                        "mt-1 w-2 h-2 rounded-full shrink-0",
-                                        item.type === "trial" ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-primary shadow-[0_0_8px_rgba(30,58,138,0.3)]"
-                                    )} />
-                                    <div className="min-w-0">
-                                        <div className="flex items-center gap-2 mb-0.5">
-                                            <p className={cn(
-                                                "text-sm font-bold truncate transition-colors group-hover:text-primary",
-                                                item.is_delivered && "line-through text-muted-foreground"
-                                            )}>
-                                                {item.name}
-                                            </p>
-                                            <Badge
-                                                variant="outline"
-                                                className={cn(
-                                                    "text-[9px] h-3.5 px-1 font-bold uppercase tracking-tight rounded-sm",
-                                                    item.type === "trial" ? "border-amber-200 text-amber-700 bg-amber-50" : "border-blue-200 text-blue-700 bg-blue-50"
-                                                )}
-                                            >
-                                                {item.type}
-                                            </Badge>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                            <span className="flex items-center gap-1 font-medium">
-                                                <Phone className="w-3 h-3 text-muted-foreground/70" />
-                                                {item.phone}
-                                            </span>
-                                            <span className="px-1.5 py-0.5 rounded-md bg-muted text-[10px] font-bold uppercase truncate max-w-[80px]">
-                                                {item.selected_garments?.[0] || "Order"}
-                                            </span>
+                        {filteredItems.map((item) => {
+                            const isDone = item.type === "trial" ? item.is_trialed : item.is_delivered;
+                            return (
+                                <div
+                                    key={`${item.type}-${item.id}`}
+                                    onClick={() => router.push(`/customers/${item.id}`)}
+                                    className={cn(
+                                        "group relative flex items-center justify-between p-4 cursor-pointer transition-all hover:bg-muted/30",
+                                        isDone && "bg-muted/10 opacity-75"
+                                    )}
+                                >
+                                    <div className="flex items-start gap-3 min-w-0">
+                                        <div className={cn(
+                                            "mt-1 w-2 h-2 rounded-full shrink-0",
+                                            item.type === "trial" ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-primary shadow-[0_0_8px_rgba(30,58,138,0.3)]"
+                                        )} />
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <p className={cn(
+                                                    "text-sm font-bold truncate transition-colors group-hover:text-primary",
+                                                    isDone && "line-through text-muted-foreground"
+                                                )}>
+                                                    {item.name}
+                                                </p>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "text-[9px] h-3.5 px-1 font-bold uppercase tracking-tight rounded-sm",
+                                                        item.type === "trial" ? "border-amber-200 text-amber-700 bg-amber-50" : "border-blue-200 text-blue-700 bg-blue-50"
+                                                    )}
+                                                >
+                                                    {item.type}
+                                                </Badge>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                                <span className="flex items-center gap-1 font-medium">
+                                                    <Phone className="w-3 h-3 text-muted-foreground/70" />
+                                                    {item.phone}
+                                                </span>
+                                                <span className="px-1.5 py-0.5 rounded-md bg-muted text-[10px] font-bold uppercase truncate max-w-[80px]">
+                                                    {item.selected_garments?.[0] || "Order"}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="flex items-center gap-2 shrink-0">
-                                    {item.type === "delivery" ? (
-                                        <button
-                                            onClick={(e) => handleToggleStatus(e, item.id, item.is_delivered || false)}
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={(e) => handleToggleStatus(e, item)}
                                             disabled={toggling === item.id}
                                             className={cn(
-                                                "p-2 rounded-lg transition-all",
-                                                item.is_delivered
-                                                    ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
-                                                    : "text-muted-foreground hover:text-primary hover:bg-white border border-transparent hover:border-border"
+                                                "h-8 px-3 rounded-full transition-all duration-300 gap-1.5 font-bold text-[10px] uppercase tracking-wider",
+                                                isDone
+                                                    ? (item.type === "trial"
+                                                        ? "bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border border-amber-500/20"
+                                                        : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20")
+                                                    : (item.type === "trial"
+                                                        ? "bg-amber-500/5 text-amber-600 hover:bg-amber-500 hover:text-white border border-amber-500/10 hover:border-amber-500"
+                                                        : "bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/10 hover:border-primary shadow-sm")
                                             )}
                                         >
                                             {toggling === item.id ? (
-                                                <Loader2 className="w-5 h-5 animate-spin" />
-                                            ) : item.is_delivered ? (
-                                                <CheckCircle2 className="w-5 h-5 fill-emerald-50" />
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            ) : isDone ? (
+                                                <>
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    <span>{item.type === "trial" ? "Done" : "Delivered"}</span>
+                                                </>
                                             ) : (
-                                                <Circle className="w-5 h-5" />
+                                                <>
+                                                    <Check className="w-3.5 h-3.5" />
+                                                    <span>{item.type === "trial" ? "Trial" : "Deliver"}</span>
+                                                </>
                                             )}
-                                        </button>
-                                    ) : (
-                                        <div className="p-2 text-amber-500 bg-amber-50 rounded-lg group-hover:bg-amber-100 transition-colors">
-                                            <Sparkles className="w-4 h-4" />
-                                        </div>
-                                    )}
-                                    <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                        </Button>
+                                        <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </CardContent>

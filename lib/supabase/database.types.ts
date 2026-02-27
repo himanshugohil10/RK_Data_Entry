@@ -84,6 +84,7 @@ export interface Database {
           jodhpuri_collar: string | null
           recorded_by: string | null
           is_delivered: boolean | null
+          is_trialed: boolean | null
           created_at: string
           updated_at: string
         }
@@ -161,6 +162,7 @@ export interface Database {
           jodhpuri_collar?: string | null
           recorded_by?: string | null
           is_delivered?: boolean | null
+          is_trialed?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -238,6 +240,7 @@ export interface Database {
           jodhpuri_collar?: string | null
           recorded_by?: string | null
           is_delivered?: boolean | null
+          is_trialed?: boolean | null
           created_at?: string
           updated_at?: string
         }
