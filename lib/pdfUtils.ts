@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { CustomerFormData, GARMENTS } from "./validations/customer";
+import { decimalToFraction } from "./measurementUtils";
 
 export const generateCustomerBill = (data: CustomerFormData) => {
     const doc = new jsPDF({
@@ -95,10 +96,10 @@ export const generateCustomerBill = (data: CustomerFormData) => {
             currentY += 2;
 
             const fieldsData = garment.fields.map(f => {
-                const val = data[f.key as keyof CustomerFormData];
+                const val = data[f.key as keyof CustomerFormData] as string | number | null | undefined;
                 return {
                     label: f.label.replace(" (pts)", ""),
-                    value: val !== undefined && val !== null ? val : "—"
+                    value: decimalToFraction(val) || "—"
                 };
             });
 

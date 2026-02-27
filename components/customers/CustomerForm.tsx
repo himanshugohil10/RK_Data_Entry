@@ -23,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { AlertTriangle, Save, RotateCcw, Copy, Edit, Printer } from "lucide-react";
 import { generateCustomerBill } from "@/lib/pdfUtils";
 import { cn } from "@/lib/utils";
+import { FRACTIONS, parseFractionalMeasurement, decimalToFraction } from "@/lib/measurementUtils";
 
 interface CustomerFormProps {
     mode: "new" | "edit" | "view";
@@ -30,45 +31,82 @@ interface CustomerFormProps {
     isDuplicate?: boolean;
 }
 
-function MeasurementInput({
+function FractionalMeasurementInput({
     label,
     fieldKey,
-    register,
+    value,
+    setValue,
     error,
     hasWarning,
     disabled = false,
 }: {
     label: string;
     fieldKey: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    register: any;
+    value: any;
+    setValue: (key: any, val: any, options?: any) => void;
     error?: string;
     hasWarning: boolean;
     disabled?: boolean;
 }) {
+    const { natural, fraction } = parseFractionalMeasurement(value);
+
     return (
         <div className="space-y-1.5">
             <Label
-                htmlFor={fieldKey}
                 className={cn("text-xs font-medium", hasWarning ? "text-amber-600" : "text-muted-foreground")}
             >
                 {label}
                 {hasWarning && <span className="ml-1 text-amber-500">∙</span>}
             </Label>
-            <Input
-                type="number"
-                step="any"
-                min="0"
-                placeholder="—"
-                {...register(fieldKey)}
-                disabled={disabled}
-                className={cn(
-                    "h-9 text-sm disabled:opacity-100 disabled:bg-muted/30 disabled:border-transparent",
-                    hasWarning && !disabled
-                        ? "border-amber-300 bg-amber-50/50 focus:border-amber-400 placeholder:text-amber-300"
-                        : ""
+
+            <div className="flex flex-col gap-1.5">
+                <div className="relative">
+                    <Input
+                        type="number"
+                        value={natural}
+                        onChange={(e) => {
+                            const n = e.target.value;
+                            setValue(fieldKey, fraction === "0" ? n : `${n} ${fraction}`, { shouldDirty: true });
+                        }}
+                        disabled={disabled}
+                        placeholder="—"
+                        className={cn(
+                            "h-10 text-sm font-medium pr-12 disabled:opacity-100 disabled:bg-muted/30 disabled:border-transparent",
+                            hasWarning && !disabled
+                                ? "border-amber-300 bg-amber-50/50 focus:border-amber-400 placeholder:text-amber-300"
+                                : ""
+                        )}
+                    />
+                    {fraction !== "0" && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-primary pointer-events-none">
+                            {fraction}
+                        </div>
+                    )}
+                </div>
+
+                {!disabled && (
+                    <div className="grid grid-cols-4 gap-1">
+                        {FRACTIONS.map((f) => (
+                            <Button
+                                key={f}
+                                type="button"
+                                variant={fraction === f ? "default" : "outline"}
+                                size="sm"
+                                className={cn(
+                                    "h-7 text-[10px] px-0 font-bold transition-all",
+                                    fraction === f ? "bg-primary text-primary-foreground shadow-sm scale-[1.02]" : "text-muted-foreground hover:bg-muted"
+                                )}
+                                onClick={() => {
+                                    const n = natural || "0";
+                                    setValue(fieldKey, f === "0" ? n : `${n} ${f}`, { shouldDirty: true });
+                                }}
+                            >
+                                {f === "0" ? "None" : f}
+                            </Button>
+                        ))}
+                    </div>
                 )}
-            />
+            </div>
             {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
     );
@@ -93,68 +131,68 @@ export function CustomerForm({ mode: initialMode, initialData, isDuplicate }: Cu
             notes: initialData.notes ?? "",
             selected_garments: initialData.selected_garments ?? [],
             // Measurements
-            shirt_length: initialData.shirt_length ?? undefined,
-            shirt_shoulder: initialData.shirt_shoulder ?? undefined,
-            shirt_astin: initialData.shirt_astin ?? undefined,
-            shirt_cuff: initialData.shirt_cuff ?? undefined,
-            shirt_chest: initialData.shirt_chest ?? undefined,
-            shirt_waist: initialData.shirt_waist ?? undefined,
-            shirt_seat: initialData.shirt_seat ?? undefined,
-            shirt_collar: initialData.shirt_collar ?? undefined,
-            pant_length: initialData.pant_length ?? undefined,
-            pant_knee: initialData.pant_knee ?? undefined,
-            pant_fork: initialData.pant_fork ?? undefined,
-            pant_waist: initialData.pant_waist ?? undefined,
-            pant_hip: initialData.pant_hip ?? undefined,
-            pant_thigh: initialData.pant_thigh ?? undefined,
-            pant_bottom: initialData.pant_bottom ?? undefined,
-            coat_length: initialData.coat_length ?? undefined,
-            coat_shoulder: initialData.coat_shoulder ?? undefined,
-            coat_astin: initialData.coat_astin ?? undefined,
-            coat_cuff: initialData.coat_cuff ?? undefined,
-            coat_chest: initialData.coat_chest ?? undefined,
-            coat_waist: initialData.coat_waist ?? undefined,
-            coat_seat: initialData.coat_seat ?? undefined,
-            coat_collar: initialData.coat_collar ?? undefined,
-            kurta_length: initialData.kurta_length ?? undefined,
-            kurta_shoulder: initialData.kurta_shoulder ?? undefined,
-            kurta_astin: initialData.kurta_astin ?? undefined,
-            kurta_cuff: initialData.kurta_cuff ?? undefined,
-            kurta_chest: initialData.kurta_chest ?? undefined,
-            kurta_waist: initialData.kurta_waist ?? undefined,
-            kurta_seat: initialData.kurta_seat ?? undefined,
-            kurta_collar: initialData.kurta_collar ?? undefined,
-            pyjama_length: initialData.pyjama_length ?? undefined,
-            pyjama_knee: initialData.pyjama_knee ?? undefined,
-            pyjama_fork: initialData.pyjama_fork ?? undefined,
-            pyjama_waist: initialData.pyjama_waist ?? undefined,
-            pyjama_hip: initialData.pyjama_hip ?? undefined,
-            pyjama_thigh: initialData.pyjama_thigh ?? undefined,
-            pyjama_bottom: initialData.pyjama_bottom ?? undefined,
-            modi_length: initialData.modi_length ?? undefined,
-            modi_shoulder: initialData.modi_shoulder ?? undefined,
-            modi_astin: initialData.modi_astin ?? undefined,
-            modi_cuff: initialData.modi_cuff ?? undefined,
-            modi_chest: initialData.modi_chest ?? undefined,
-            modi_waist: initialData.modi_waist ?? undefined,
-            modi_seat: initialData.modi_seat ?? undefined,
-            modi_collar: initialData.modi_collar ?? undefined,
-            safari_length: initialData.safari_length ?? undefined,
-            safari_shoulder: initialData.safari_shoulder ?? undefined,
-            safari_astin: initialData.safari_astin ?? undefined,
-            safari_cuff: initialData.safari_cuff ?? undefined,
-            safari_chest: initialData.safari_chest ?? undefined,
-            safari_waist: initialData.safari_waist ?? undefined,
-            safari_seat: initialData.safari_seat ?? undefined,
-            safari_collar: initialData.safari_collar ?? undefined,
-            jodhpuri_length: initialData.jodhpuri_length ?? undefined,
-            jodhpuri_shoulder: initialData.jodhpuri_shoulder ?? undefined,
-            jodhpuri_astin: initialData.jodhpuri_astin ?? undefined,
-            jodhpuri_cuff: initialData.jodhpuri_cuff ?? undefined,
-            jodhpuri_chest: initialData.jodhpuri_chest ?? undefined,
-            jodhpuri_waist: initialData.jodhpuri_waist ?? undefined,
-            jodhpuri_seat: initialData.jodhpuri_seat ?? undefined,
-            jodhpuri_collar: initialData.jodhpuri_collar ?? undefined,
+            shirt_length: decimalToFraction(initialData.shirt_length),
+            shirt_shoulder: decimalToFraction(initialData.shirt_shoulder),
+            shirt_astin: decimalToFraction(initialData.shirt_astin),
+            shirt_cuff: decimalToFraction(initialData.shirt_cuff),
+            shirt_chest: decimalToFraction(initialData.shirt_chest),
+            shirt_waist: decimalToFraction(initialData.shirt_waist),
+            shirt_seat: decimalToFraction(initialData.shirt_seat),
+            shirt_collar: decimalToFraction(initialData.shirt_collar),
+            pant_length: decimalToFraction(initialData.pant_length),
+            pant_knee: decimalToFraction(initialData.pant_knee),
+            pant_fork: decimalToFraction(initialData.pant_fork),
+            pant_waist: decimalToFraction(initialData.pant_waist),
+            pant_hip: decimalToFraction(initialData.pant_hip),
+            pant_thigh: decimalToFraction(initialData.pant_thigh),
+            pant_bottom: decimalToFraction(initialData.pant_bottom),
+            coat_length: decimalToFraction(initialData.coat_length),
+            coat_shoulder: decimalToFraction(initialData.coat_shoulder),
+            coat_astin: decimalToFraction(initialData.coat_astin),
+            coat_cuff: decimalToFraction(initialData.coat_cuff),
+            coat_chest: decimalToFraction(initialData.coat_chest),
+            coat_waist: decimalToFraction(initialData.coat_waist),
+            coat_seat: decimalToFraction(initialData.coat_seat),
+            coat_collar: decimalToFraction(initialData.coat_collar),
+            kurta_length: decimalToFraction(initialData.kurta_length),
+            kurta_shoulder: decimalToFraction(initialData.kurta_shoulder),
+            kurta_astin: decimalToFraction(initialData.kurta_astin),
+            kurta_cuff: decimalToFraction(initialData.kurta_cuff),
+            kurta_chest: decimalToFraction(initialData.kurta_chest),
+            kurta_waist: decimalToFraction(initialData.kurta_waist),
+            kurta_seat: decimalToFraction(initialData.kurta_seat),
+            kurta_collar: decimalToFraction(initialData.kurta_collar),
+            pyjama_length: decimalToFraction(initialData.pyjama_length),
+            pyjama_knee: decimalToFraction(initialData.pyjama_knee),
+            pyjama_fork: decimalToFraction(initialData.pyjama_fork),
+            pyjama_waist: decimalToFraction(initialData.pyjama_waist),
+            pyjama_hip: decimalToFraction(initialData.pyjama_hip),
+            pyjama_thigh: decimalToFraction(initialData.pyjama_thigh),
+            pyjama_bottom: decimalToFraction(initialData.pyjama_bottom),
+            modi_length: decimalToFraction(initialData.modi_length),
+            modi_shoulder: decimalToFraction(initialData.modi_shoulder),
+            modi_astin: decimalToFraction(initialData.modi_astin),
+            modi_cuff: decimalToFraction(initialData.modi_cuff),
+            modi_chest: decimalToFraction(initialData.modi_chest),
+            modi_waist: decimalToFraction(initialData.modi_waist),
+            modi_seat: decimalToFraction(initialData.modi_seat),
+            modi_collar: decimalToFraction(initialData.modi_collar),
+            safari_length: decimalToFraction(initialData.safari_length),
+            safari_shoulder: decimalToFraction(initialData.safari_shoulder),
+            safari_astin: decimalToFraction(initialData.safari_astin),
+            safari_cuff: decimalToFraction(initialData.safari_cuff),
+            safari_chest: decimalToFraction(initialData.safari_chest),
+            safari_waist: decimalToFraction(initialData.safari_waist),
+            safari_seat: decimalToFraction(initialData.safari_seat),
+            safari_collar: decimalToFraction(initialData.safari_collar),
+            jodhpuri_length: decimalToFraction(initialData.jodhpuri_length),
+            jodhpuri_shoulder: decimalToFraction(initialData.jodhpuri_shoulder),
+            jodhpuri_astin: decimalToFraction(initialData.jodhpuri_astin),
+            jodhpuri_cuff: decimalToFraction(initialData.jodhpuri_cuff),
+            jodhpuri_chest: decimalToFraction(initialData.jodhpuri_chest),
+            jodhpuri_waist: decimalToFraction(initialData.jodhpuri_waist),
+            jodhpuri_seat: decimalToFraction(initialData.jodhpuri_seat),
+            jodhpuri_collar: decimalToFraction(initialData.jodhpuri_collar),
         }
         : { date: today, trial_date: today, delivery_date: today, dob: "", selected_garments: [] };
 
@@ -426,11 +464,12 @@ export function CustomerForm({ mode: initialMode, initialData, isDuplicate }: Cu
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                             {g.fields.map((f) => (
-                                <MeasurementInput
+                                <FractionalMeasurementInput
                                     key={f.key}
                                     label={f.label}
                                     fieldKey={f.key}
-                                    register={register}
+                                    value={watchedValues[f.key as keyof CustomerFormData]}
+                                    setValue={setValue}
                                     disabled={isReadOnly}
                                     error={errors[f.key as keyof CustomerFormData]?.message}
                                     hasWarning={emptyFields.some((e) => e.key === f.key)}

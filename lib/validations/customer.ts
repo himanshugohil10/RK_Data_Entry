@@ -3,8 +3,11 @@ import { z } from "zod";
 const indianPhoneRegex = /^[6-9]\d{9}$/;
 
 const measurementField = z.preprocess(
-    (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
-    z.number({ invalid_type_error: "Must be a number" }).positive("Must be positive").optional()
+    (val) => (val === "" || val === null || val === undefined ? undefined : val),
+    z.union([
+        z.number(),
+        z.string()
+    ]).optional()
 );
 
 export const customerSchema = z.object({

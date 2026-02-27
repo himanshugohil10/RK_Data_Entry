@@ -26,7 +26,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={`${inter.variable} ${poppins.variable} font-sans antialiased text-[0.925rem]`}>
+            <body suppressHydrationWarning className={`${inter.variable} ${poppins.variable} font-sans antialiased text-[0.925rem]`}>
                 {children}
                 <Toaster richColors position="top-right" />
             </body>
