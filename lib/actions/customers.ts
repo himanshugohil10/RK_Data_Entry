@@ -327,13 +327,40 @@ export async function createCustomer(formData: CustomerFormData): Promise<Action
 
     const supabase = await createClient();
 
+    // Check for duplicates and auto-increment name
+    let finalName = parsed.data.name;
+    const baseName = finalName.includes(" Size ") ? finalName.split(" Size ")[0] : finalName;
+
+    const { data: similar } = await (supabase as any)
+        .from("customers")
+        .select("name")
+        .ilike("name", `${baseName}%`)
+        .eq("date", parsed.data.date);
+
+    if (similar && similar.some((s: any) => s.name.toLowerCase() === finalName.toLowerCase())) {
+        let maxNum = 1;
+        similar.forEach((s: any) => {
+            const name = s.name;
+            if (name.startsWith(`${baseName} Size `)) {
+                const parts = name.split(" Size ");
+                const num = parseInt(parts[parts.length - 1]);
+                if (!isNaN(num) && num > maxNum) {
+                    maxNum = num;
+                }
+            } else if (name.toLowerCase() === baseName.toLowerCase()) {
+                if (maxNum < 1) maxNum = 1;
+            }
+        });
+        finalName = `${baseName} Size ${maxNum + 1}`;
+    }
+
     // Get current user for recorded_by
     const { data: { user } } = await supabase.auth.getUser();
     const recorded_by = user?.email ?? null;
 
     const { data, error } = await (supabase as any)
         .from("customers")
-        .insert([{ ...parsed.data, recorded_by }])
+        .insert([{ ...parsed.data, name: finalName, recorded_by }])
         .select()
         .single();
 
@@ -362,9 +389,37 @@ export async function updateCustomer(
 
     const supabase = await createClient();
 
+    // Check for duplicates and auto-increment name
+    let finalName = parsed.data.name;
+    const baseName = finalName.includes(" Size ") ? finalName.split(" Size ")[0] : finalName;
+
+    const { data: similar } = await (supabase as any)
+        .from("customers")
+        .select("id, name")
+        .ilike("name", `${baseName}%`)
+        .eq("date", parsed.data.date)
+        .neq("id", id);
+
+    if (similar && similar.some((s: any) => s.name.toLowerCase() === finalName.toLowerCase())) {
+        let maxNum = 1;
+        similar.forEach((s: any) => {
+            const name = s.name;
+            if (name.startsWith(`${baseName} Size `)) {
+                const parts = name.split(" Size ");
+                const num = parseInt(parts[parts.length - 1]);
+                if (!isNaN(num) && num > maxNum) {
+                    maxNum = num;
+                }
+            } else if (name.toLowerCase() === baseName.toLowerCase()) {
+                if (maxNum < 1) maxNum = 1;
+            }
+        });
+        finalName = `${baseName} Size ${maxNum + 1}`;
+    }
+
     const { data, error } = await (supabase as any)
         .from("customers")
-        .update({ ...parsed.data, updated_at: new Date().toISOString() })
+        .update({ ...parsed.data, name: finalName, updated_at: new Date().toISOString() })
         .eq("id", id)
         .select()
         .single();

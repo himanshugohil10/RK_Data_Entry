@@ -62,11 +62,19 @@ function FractionalMeasurementInput({
             <div className="flex flex-col gap-1.5">
                 <div className="relative">
                     <Input
-                        type="number"
+                        type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         value={natural}
                         onChange={(e) => {
-                            const n = e.target.value;
+                            const n = e.target.value.replace(/\D/g, "");
                             setValue(fieldKey, fraction === "0" ? n : `${n} ${fraction}`, { shouldDirty: true });
+                        }}
+                        onKeyDown={(e) => {
+                            const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End"];
+                            if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+                                e.preventDefault();
+                            }
                         }}
                         disabled={disabled}
                         placeholder="—"
